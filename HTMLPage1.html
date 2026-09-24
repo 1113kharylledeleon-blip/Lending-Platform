@@ -1,0 +1,1100 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Pro - Complete Financial Matrix</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.4);
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(16, 185, 129, 0.7);
+            }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between py-3">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-brand-500/25 ring-2 ring-brand-400/20">
+                    <i class="fa-solid fa-wallet text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">FinTrack Pro</h1>
+                    <p id="authStatusText" class="text-[11px] text-amber-400 font-semibold tracking-wide flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>Not Connected</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition flex items-center justify-center border border-slate-700/80 shadow-inner">
+                    <i id="themeIcon" class="fa-solid fa-sun text-amber-400"></i>
+                </button>
+                <div id="authButtonContainer">
+                    <button onclick="loginWithGoogle()" class="px-4 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white shadow-lg shadow-brand-600/30 transition flex items-center space-x-2 border border-brand-500/30">
+                        <i class="fa-brands fa-google"></i><span>Sign In</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Navigation Tabs -->
+        <div class="flex space-x-3 border-b border-slate-800/80 pb-4 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-600/25 transition whitespace-nowrap flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard & Summary
+            </button>
+            <button onclick="switchTab('accounts')" id="tab-accounts" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800/80 transition whitespace-nowrap border border-slate-800/80 flex items-center gap-2">
+                <i class="fa-solid fa-building-columns"></i> Accounts & Wallets
+            </button>
+            <button onclick="switchTab('expenses')" id="tab-expenses" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800/80 transition whitespace-nowrap border border-slate-800/80 flex items-center gap-2">
+                <i class="fa-solid fa-receipt"></i> Monthly Expense Matrix
+            </button>
+            <button onclick="switchTab('pautang')" id="tab-pautang" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800/80 transition whitespace-nowrap border border-slate-800/80 flex items-center gap-2">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Pautang Matrix
+            </button>
+        </div>
+
+        <!-- ==================== DASHBOARD TAB ==================== -->
+        <div id="section-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden group hover:border-brand-500/50 transition">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-brand-500/5 rounded-full blur-2xl group-hover:bg-brand-500/10 transition"></div>
+                    <div class="flex items-center justify-between text-slate-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Net Assets</span>
+                        <div class="w-10 h-10 rounded-2xl bg-brand-500/15 text-brand-400 flex items-center justify-center shadow-inner"><i class="fa-solid fa-wallet"></i></div>
+                    </div>
+                    <div id="stat-total-assets" class="text-2xl font-black text-white tracking-tight">₱0.00</div>
+                    <div class="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1"><i class="fa-solid fa-circle-check text-brand-400"></i> Across all bank accounts & e-wallets</div>
+                </div>
+
+                <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden group hover:border-amber-500/50 transition">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition"></div>
+                    <div class="flex items-center justify-between text-slate-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pautang Outstanding</span>
+                        <div class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center shadow-inner"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    </div>
+                    <div id="stat-total-pautang" class="text-2xl font-black text-white tracking-tight">₱0.00</div>
+                    <div class="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1"><i class="fa-solid fa-clock text-amber-400"></i> Active balance left to collect</div>
+                </div>
+
+                <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden group hover:border-rose-500/50 transition">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition"></div>
+                    <div class="flex items-center justify-between text-slate-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Expenses (All-Time)</span>
+                        <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-400 flex items-center justify-center shadow-inner"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    </div>
+                    <div id="stat-total-expenses" class="text-2xl font-black text-white tracking-tight">₱0.00</div>
+                    <div class="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1"><i class="fa-solid fa-receipt text-rose-400"></i> Sum of all period logs</div>
+                </div>
+
+                <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden group hover:border-blue-500/50 transition">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition"></div>
+                    <div class="flex items-center justify-between text-slate-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Months Logged</span>
+                        <div class="w-10 h-10 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center shadow-inner"><i class="fa-solid fa-calendar-days"></i></div>
+                    </div>
+                    <div id="stat-months-count" class="text-2xl font-black text-white tracking-tight">0</div>
+                    <div class="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1"><i class="fa-solid fa-calendar-check text-blue-400"></i> Periods with valid entries</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-brand-400"></i> Monthly Breakdown (<span id="chartYearLabel">2026</span>)
+                        </h3>
+                        <select id="chartYearSelector" onchange="changeChartYear(this.value)" class="bg-slate-800/90 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-brand-500 font-semibold shadow-inner">
+                        </select>
+                    </div>
+                    <div class="h-68 relative"><canvas id="monthlyExpenseChart"></canvas></div>
+                </div>
+
+                <div class="bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-5 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-brand-400"></i> Category Breakdown (All-Time)
+                    </h3>
+                    <div class="h-68 relative flex items-center justify-center"><canvas id="categoryPieChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ACCOUNTS TAB ==================== -->
+        <div id="section-accounts" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Bank Accounts & E-Wallets</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Track your cash pool, balances, and target goals.</p>
+                </div>
+                <button onclick="openAccountModal()" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center space-x-2 border border-brand-500/30">
+                    <i class="fa-solid fa-plus"></i><span>Add New Account</span>
+                </button>
+            </div>
+            <div id="accountsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+
+        <!-- ==================== EXPENSE MATRIX TAB ==================== -->
+        <div id="section-expenses" class="space-y-6 hidden">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Monthly Expense Spreadsheet Ledger</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Select any month and year to log expenses cleanly.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <select id="yearSelector" onchange="changeActiveYear(this.value)" class="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 font-bold shadow-inner"></select>
+                    <select id="monthSelector" onchange="changeActiveMonth(this.value)" class="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 font-bold shadow-inner">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                    <button onclick="addRowEntry()" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center space-x-2 border border-brand-500/30">
+                        <i class="fa-solid fa-plus"></i><span>Add Row</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl">
+                <div class="p-5 border-b border-slate-800/80 flex justify-between items-center bg-slate-900/90">
+                    <h3 id="currentMonthTitle" class="text-base font-bold text-white">January 2026</h3>
+                    <div class="text-xs font-bold px-4 py-1.5 bg-brand-500/10 text-brand-400 rounded-xl border border-brand-500/20 shadow-inner flex items-center gap-2">
+                        <span>Period Total:</span> <span id="currentMonthTotal">₱0.00</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-950/80 text-slate-400 uppercase tracking-wider border-b border-slate-800/80 text-[11px]">
+                                <th class="p-4 font-bold min-w-[150px]">Date Paid</th>
+                                <th class="p-4 font-bold min-w-[180px]">Responsibilities</th>
+                                <th class="p-4 font-bold min-w-[140px]">Food</th>
+                                <th class="p-4 font-bold min-w-[140px]">Transpo</th>
+                                <th class="p-4 font-bold min-w-[140px]">Shopping</th>
+                                <th class="p-4 font-bold min-w-[130px]">Amount (₱)</th>
+                                <th class="p-4 font-bold text-center w-16">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody" class="divide-y divide-slate-800/40"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PAUTANG MATRIX TAB ==================== -->
+        <div id="section-pautang" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-2xl">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Pautang Matrix Tracker</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Click any borrower's name to open their calendar ledger. Click any Net Balance amount to toggle inclusion.</p>
+                </div>
+                <button onclick="openPautangModal()" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center space-x-2 border border-brand-500/30">
+                    <i class="fa-solid fa-plus"></i><span>Add Borrower / Loan Entry</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl">
+                <div class="p-5 border-b border-slate-800/80 flex justify-between items-center bg-slate-900/90">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-table text-brand-400"></i> Pautang Master Schedule</h3>
+                    <div class="text-xs font-bold px-4 py-1.5 bg-brand-500/10 text-brand-400 rounded-xl border border-brand-500/20 shadow-inner flex items-center gap-2">
+                        <span>Total Pautang Outstanding:</span> <span id="masterPautangTotal">₱0.00</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-950/80 text-slate-400 uppercase tracking-wider border-b border-slate-800/80 text-[11px]">
+                                <th class="p-4 font-bold min-w-[200px]">Borrower Name (Click to Open)</th>
+                                <th class="p-4 font-bold min-w-[130px]">Total Principal (₱)</th>
+                                <th class="p-4 font-bold min-w-[180px]">Interest Settings (%)</th>
+                                <th class="p-4 font-bold min-w-[160px]">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span>Month:</span>
+                                        <select id="pautangColumnMonthSelect" onchange="changePautangColMonth(this.value)" class="bg-slate-900 border border-slate-700 text-brand-400 font-bold text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-brand-500 shadow-inner">
+                                            <option value="January">January</option>
+                                            <option value="February">February</option>
+                                            <option value="March">March</option>
+                                            <option value="April">April</option>
+                                            <option value="May">May</option>
+                                            <option value="June">June</option>
+                                            <option value="July">July</option>
+                                            <option value="August">August</option>
+                                            <option value="September">September</option>
+                                            <option value="October">October</option>
+                                            <option value="November">November</option>
+                                            <option value="December">December</option>
+                                        </select>
+                                    </div>
+                                </th>
+                                <th class="p-4 font-bold min-w-[160px] bg-brand-950/40 text-brand-300">Net Balance (Click to Toggle)</th>
+                                <th class="p-4 font-bold text-center w-20">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pautangTableBody" class="divide-y divide-slate-800/40"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Account Modal -->
+    <div id="accountModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-7 shadow-2xl space-y-5 animate-in fade-in duration-200">
+            <div class="flex justify-between items-center">
+                <h3 id="accountModalTitle" class="text-base font-bold text-white">Add Bank Account / Wallet</h3>
+                <button onclick="closeAccountModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <input type="hidden" id="editAccountId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Account / Bank Name</label>
+                    <input type="text" id="accName" placeholder="e.g. Landbank" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Current Balance (₱)</label>
+                    <input type="text" id="accBalance" placeholder="0.00" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Goal / Target Balance</label>
+                    <input type="text" id="accGoal" placeholder="0.00" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeAccountModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition">Cancel</button>
+                <button onclick="saveAccount()" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/30 transition border border-brand-500/30">Save Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pautang Entry Modal -->
+    <div id="pautangModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-7 shadow-2xl space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 id="pautangModalTitle" class="text-base font-bold text-white">Add Pautang Entry</h3>
+                <button onclick="closePautangModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <input type="hidden" id="editPautangIdx">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Borrower / Title Name</label>
+                    <input type="text" id="pautangName" placeholder="e.g. Utang ni Tita Nix" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Initial Principal (₱)</label>
+                        <input type="text" id="pautangPrincipal" placeholder="0.00" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Interest Rate (%/mo)</label>
+                        <input type="text" id="pautangInterest" placeholder="0" value="0" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Add Interest to Capital / Principal?</label>
+                    <select id="pautangAddInterestToCapital" class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                        <option value="yes">Yes (Compound/Add interest into running principal)</option>
+                        <option value="no">No (Keep interest separate / flat structure)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closePautangModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition">Cancel</button>
+                <button onclick="savePautang()" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/30 transition border border-brand-500/30">Save Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrower Calendar & Ledger Modal -->
+    <div id="borrowerCalendarModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl p-7 shadow-2xl space-y-5">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 id="calBorrowerTitle" class="text-base font-bold text-white">Borrower Ledger</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Select a date to add a new loan or record payment.</p>
+                </div>
+                <button onclick="closeBorrowerCalendarModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <!-- Calendar View Selector -->
+                <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-3 shadow-inner">
+                    <div class="flex justify-between items-center">
+                        <span id="calMonthYearLabel" class="text-xs font-bold text-white">January 2026</span>
+                        <div class="space-x-1">
+                            <button onclick="changeCalMonth(-1)" class="w-7 h-7 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs transition shadow"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button onclick="changeCalMonth(1)" class="w-7 h-7 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs transition shadow"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                </div>
+
+                <!-- Selected Date Transaction Form -->
+                <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-3 shadow-inner">
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-brand-400 uppercase tracking-wider">Log Entry for Date</h4>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Selected Date</label>
+                            <input type="text" id="selectedTxDate" readonly class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 shadow-inner">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Transaction Type</label>
+                            <select id="selectedTxType" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 shadow-inner font-semibold">
+                                <option value="borrow">Dagdag Utang (Add Loan)</option>
+                                <option value="payment">Bayad / Payment (-)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Amount (₱)</label>
+                            <input type="text" id="selectedTxAmount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 shadow-inner">
+                        </div>
+                    </div>
+                    <button onclick="saveBorrowerTransaction()" class="w-full py-2.5 bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow transition border border-brand-500/30">Save Transaction</button>
+                </div>
+            </div>
+
+            <!-- Transaction History Log for this borrower -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-300 tracking-wide uppercase">Transaction History</h4>
+                <div class="max-h-36 overflow-y-auto space-y-1.5 pr-1" id="borrowerTxList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD2BPDUzEkPbDQve4Z0SMXBxyiZX3HMDI4",
+            authDomain: "fintrack-pro-ee11e.firebaseapp.com",
+            projectId: "fintrack-pro-ee11e",
+            storageBucket: "fintrack-pro-ee11e.firebasestorage.app",
+            messagingSenderId: "62996991007",
+            appId: "1:62996991007:web:4c149489e719d91618192a",
+            measurementId: "G-78ZHNCP2QC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const monthList = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const defaultExpenses = {};
+        defaultExpenses["January 2026"] = [
+            { date: "2026-01-01", responsibilities: "Bills / Utilities", food: "", transpo: "", shopping: "", amount: 1500 },
+            { date: "2026-01-02", responsibilities: "", food: "405", transpo: "", shopping: "", amount: 405 }
+        ];
+
+        const defaultPautang = [
+            { id: "p_1", name: "Ryan (Bayad na)", principal: 55000, interestRate: 0, addInterestToCapital: "yes", excludeFromTotal: false, transactions: [{ date: "2026-04-01", type: "payment", amount: 5000 }] },
+            { id: "p_2", name: "Utang ni Tita Rea", principal: 7000, interestRate: 0, addInterestToCapital: "yes", excludeFromTotal: false, transactions: [] },
+            { id: "p_3", name: "Utang ni Tita Alma", principal: 10000, interestRate: 0, addInterestToCapital: "yes", excludeFromTotal: false, transactions: [] },
+            { id: "p_4", name: "Utang ni Ate Nix", principal: 210000, interestRate: 0, addInterestToCapital: "yes", excludeFromTotal: false, transactions: [{ date: "2026-07-01", type: "payment", amount: 16000 }] },
+            { id: "p_5", name: "Utang ni Ate Jul", principal: 32500, interestRate: 0, addInterestToCapital: "yes", excludeFromTotal: false, transactions: [{ date: "2026-06-01", type: "payment", amount: 5000 }] }
+        ];
+
+        const defaultData = {
+            accounts: [
+                { id: "acc_1", name: "Landbank - Academia", balance: 116000, goal: 24000 },
+                { id: "acc_2", name: "Security Bank - Savings", balance: 25000, goal: 25000 }
+            ],
+            expenses: defaultExpenses,
+            pautang: defaultPautang,
+            activeMonth: "January",
+            activeYear: "2026",
+            chartYear: "2026",
+            pautangColMonth: "January"
+        };
+
+        window.appData = defaultData;
+        window.activeMonth = "January";
+        window.activeYear = "2026";
+        window.chartYear = "2026";
+        window.pautangColMonth = "January";
+
+        let currentUser = null;
+        let monthlyChartInstance = null;
+        let categoryChartInstance = null;
+
+        let currentActiveBorrowerIdx = null;
+        let calMonthIndex = 0;
+        let calYearValue = 2026;
+
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            const authStatusText = document.getElementById('authStatusText');
+            const authButtonContainer = document.getElementById('authButtonContainer');
+
+            if (user) {
+                authStatusText.innerHTML = `<span class="w-2 h-2 rounded-full bg-brand-400"></span>Connected: ${user.displayName || user.email}`;
+                authStatusText.className = "text-[11px] text-brand-400 font-semibold tracking-wide flex items-center gap-1.5";
+                authButtonContainer.innerHTML = `<button onclick="logoutGoogle()" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 transition shadow-inner">Sign Out</button>`;
+                await loadCloudData();
+            } else {
+                authStatusText.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>Not Connected (Local Mode)`;
+                authStatusText.className = "text-[11px] text-amber-400 font-semibold tracking-wide flex items-center gap-1.5";
+                authButtonContainer.innerHTML = `<button onclick="loginWithGoogle()" class="px-4 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 text-white shadow-lg shadow-brand-600/30 transition flex items-center space-x-2 border border-brand-500/30"><i class="fa-brands fa-google"></i><span>Sign In</span></button>`;
+                window.appData = defaultData;
+                refreshUI();
+            }
+        });
+
+        window.loginWithGoogle = async function() {
+            const provider = new GoogleAuthProvider();
+            try { await signInWithPopup(auth, provider); } catch (error) { alert("Sign-in failed: " + error.message); }
+        };
+
+        window.logoutGoogle = async function() { await signOut(auth); };
+
+        async function loadCloudData() {
+            if(!currentUser) return;
+            try {
+                const docRef = doc(db, "users", currentUser.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    window.appData = docSnap.data();
+                    if(!window.appData.pautang) window.appData.pautang = defaultPautang;
+                    window.appData.pautang.forEach(p => {
+                        if(p.excludeFromTotal === undefined) p.excludeFromTotal = false;
+                    });
+                } else {
+                    await setDoc(docRef, defaultData);
+                    window.appData = defaultData;
+                }
+                window.activeMonth = window.appData.activeMonth || "January";
+                window.activeYear = window.appData.activeYear || "2026";
+                window.chartYear = window.appData.chartYear || "2026";
+                window.pautangColMonth = window.appData.pautangColMonth || "January";
+                refreshUI();
+            } catch(e) { console.error("Error loading cloud data:", e); }
+        }
+
+        window.saveData = async function() {
+            window.appData.activeMonth = window.activeMonth;
+            window.appData.activeYear = window.activeYear;
+            window.appData.chartYear = window.chartYear;
+            window.appData.pautangColMonth = window.pautangColMonth;
+            refreshUI();
+            if(currentUser) {
+                try { await setDoc(doc(db, "users", currentUser.uid), window.appData); } catch(e) { console.error("Error saving to cloud:", e); }
+            }
+        };
+
+        function refreshUI() {
+            populateYearSelectors();
+            updateDashboard();
+            renderAccounts();
+            renderExpenseTable();
+            renderPautangTable();
+        }
+
+        function populateYearSelectors() {
+            let years = [];
+            for(let y = 2026; y <= 2036; y++) years.push(y.toString());
+
+            let ySel = document.getElementById('yearSelector');
+            ySel.innerHTML = '';
+            years.forEach(y => {
+                let opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                if(y === window.activeYear) opt.selected = true;
+                ySel.appendChild(opt);
+            });
+
+            let cSel = document.getElementById('chartYearSelector');
+            cSel.innerHTML = '';
+            years.forEach(y => {
+                let opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                if(y === window.chartYear) opt.selected = true;
+                cSel.appendChild(opt);
+            });
+            document.getElementById('chartYearLabel').innerText = window.chartYear;
+        }
+
+        window.switchTab = function(tabId) {
+            ['dashboard', 'accounts', 'expenses', 'pautang'].forEach(t => {
+                let sec = document.getElementById(`section-${t}`);
+                let tab = document.getElementById(`tab-${t}`);
+                if(sec) sec.classList.add('hidden');
+                if(tab) tab.className = "px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800/80 transition whitespace-nowrap border border-slate-800/80 flex items-center gap-2";
+            });
+            let activeSec = document.getElementById(`section-${tabId}`);
+            let activeTab = document.getElementById(`tab-${tabId}`);
+            if(activeSec) activeSec.classList.remove('hidden');
+            if(activeTab) activeTab.className = "px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-600/25 transition whitespace-nowrap flex items-center gap-2";
+
+            if(tabId === 'dashboard') renderCharts();
+            else if(tabId === 'expenses') renderExpenseTable();
+            else if(tabId === 'accounts') renderAccounts();
+            else if(tabId === 'pautang') renderPautangTable();
+        };
+
+        window.formatPHP = function(num) {
+            return '₱' + Number(num || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        function updateDashboard() {
+            let totalAssets = window.appData.accounts.reduce((sum, acc) => sum + parseFloat(acc.balance || 0), 0);
+            document.getElementById('stat-total-assets').innerText = formatPHP(totalAssets);
+
+            let totalPautangOutstanding = 0;
+            (window.appData.pautang || []).forEach(p => {
+                let basePrincipal = parseFloat(p.principal || 0);
+                let interestRate = parseFloat(p.interestRate || 0) / 100;
+                let addInterestToCapital = p.addInterestToCapital === 'yes';
+
+                let totalAddLoans = 0;
+                let totalPayments = 0;
+                (p.transactions || []).forEach(tx => {
+                    let amt = parseFloat(tx.amount || 0);
+                    if(tx.type === 'borrow') totalAddLoans += amt;
+                    if(tx.type === 'payment') totalPayments += amt;
+                });
+
+                let totalPrincipal = basePrincipal + totalAddLoans;
+                let netBalance = 0;
+
+                if (addInterestToCapital) {
+                    let accruedInterest = totalPrincipal * interestRate;
+                    netBalance = (totalPrincipal + accruedInterest) - totalPayments;
+                } else {
+                    let flatInterest = basePrincipal * interestRate;
+                    netBalance = totalPrincipal + flatInterest - totalPayments;
+                }
+
+                if(!p.excludeFromTotal) {
+                    totalPautangOutstanding += netBalance;
+                }
+            });
+            document.getElementById('stat-total-pautang').innerText = formatPHP(totalPautangOutstanding);
+
+            let totalExp = 0;
+            let monthsWithData = 0;
+            Object.keys(window.appData.expenses || {}).forEach(key => {
+                if(window.appData.expenses[key].length > 0) monthsWithData++;
+            });
+            document.getElementById('stat-months-count').innerText = monthsWithData;
+
+            Object.values(window.appData.expenses || {}).forEach(rows => {
+                rows.forEach(r => { totalExp += parseFloat(r.amount || 0); });
+            });
+            document.getElementById('stat-total-expenses').innerText = formatPHP(totalExp);
+
+            if (!document.getElementById('section-dashboard').classList.contains('hidden')) {
+                renderCharts();
+            }
+        }
+
+        function renderCharts() {
+            let selectedYear = window.chartYear || "2026";
+            let monthLabels = monthList;
+            let monthTotals = monthLabels.map(m => {
+                let key = `${m} ${selectedYear}`;
+                let rows = window.appData.expenses[key] || [];
+                return rows.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+            });
+
+            const ctxBar = document.getElementById('monthlyExpenseChart').getContext('2d');
+            if(monthlyChartInstance) monthlyChartInstance.destroy();
+            monthlyChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: { labels: monthLabels.map(m => m.substring(0,3)), datasets: [{ label: 'Total Expenses (₱)', data: monthTotals, backgroundColor: '#10b981', borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#94a3b8', font: { size: 11, weight: 'bold' } }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+            });
+
+            let catSum = { "Responsibilities": 0, "Food": 0, "Transpo": 0, "Shopping": 0 };
+            Object.values(window.appData.expenses || {}).forEach(rows => {
+                rows.forEach(r => {
+                    let amt = parseFloat(r.amount || 0);
+                    if(r.responsibilities) catSum["Responsibilities"] += amt * 0.4;
+                    if(r.food) catSum["Food"] += amt * 0.3;
+                    if(r.transpo) catSum["Transpo"] += amt * 0.15;
+                    if(r.shopping) catSum["Shopping"] += amt * 0.15;
+                });
+            });
+
+            const ctxPie = document.getElementById('categoryPieChart').getContext('2d');
+            if(categoryChartInstance) categoryChartInstance.destroy();
+            categoryChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: { labels: Object.keys(catSum), datasets: [{ data: Object.values(catSum), backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ec4899'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 14, font: { weight: 'bold' } } } } }
+            });
+        }
+
+        window.renderAccounts = function() {
+            let container = document.getElementById('accountsGrid');
+            container.innerHTML = '';
+            window.appData.accounts.forEach(acc => {
+                let progress = acc.goal ? Math.min(100, (acc.balance / acc.goal) * 100) : 0;
+                container.innerHTML += `
+                    <div class="bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-800/80 shadow-xl space-y-4 hover:border-slate-700 transition group">
+                        <div class="flex justify-between items-start">
+                            <div><h4 class="font-bold text-white text-base">${acc.name}</h4><p class="text-xs text-slate-400 mt-0.5">Wallet / Bank Account</p></div>
+                            <div class="flex space-x-1.5 opacity-90 group-hover:opacity-100 transition">
+                                <button onclick="editAccount('${acc.id}')" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition shadow"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="deleteAccount('${acc.id}')" class="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center transition shadow"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div><span class="text-xs font-semibold text-slate-400">Balance</span><div class="text-xl font-black text-brand-400 mt-0.5">${formatPHP(acc.balance)}</div></div>
+                            ${acc.goal ? `<div class="text-right"><span class="text-xs font-semibold text-slate-400">Goal Target</span><div class="text-sm font-bold text-slate-200 mt-0.5">${formatPHP(acc.goal)}</div></div>` : ''}
+                        </div>
+                        ${acc.goal ? `<div class="space-y-1.5"><div class="flex justify-between text-xs font-bold text-slate-400"><span>Progress</span><span>${progress.toFixed(0)}%</span></div><div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden shadow-inner"><div class="bg-gradient-to-r from-brand-600 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: ${progress}%"></div></div></div>` : ''}
+                    </div>`;
+            });
+        };
+
+        window.openAccountModal = function(id = null) {
+            document.getElementById('editAccountId').value = '';
+            document.getElementById('accName').value = '';
+            document.getElementById('accBalance').value = '';
+            document.getElementById('accGoal').value = '';
+            document.getElementById('accountModalTitle').innerText = "Add Bank Account / Wallet";
+            if(id) {
+                let acc = window.appData.accounts.find(a => a.id === id);
+                if(acc) {
+                    document.getElementById('editAccountId').value = acc.id;
+                    document.getElementById('accName').value = acc.name;
+                    document.getElementById('accBalance').value = acc.balance;
+                    document.getElementById('accGoal').value = acc.goal || '';
+                    document.getElementById('accountModalTitle').innerText = "Edit Bank Account";
+                }
+            }
+            document.getElementById('accountModal').classList.remove('hidden');
+        };
+        window.closeAccountModal = function() { document.getElementById('accountModal').classList.add('hidden'); };
+        window.saveAccount = function() {
+            let id = document.getElementById('editAccountId').value;
+            let name = document.getElementById('accName').value.trim();
+            let balance = parseFloat(document.getElementById('accBalance').value) || 0;
+            let goal = parseFloat(document.getElementById('accGoal').value) || 0;
+            if(!name) return alert("Please enter an account name.");
+            if(id) {
+                let acc = window.appData.accounts.find(a => a.id === id);
+                if(acc) { acc.name = name; acc.balance = balance; acc.goal = goal; }
+            } else {
+                window.appData.accounts.push({ id: 'acc_' + Date.now(), name, balance, goal });
+            }
+            window.saveData();
+            closeAccountModal();
+        };
+        window.editAccount = function(id) { openAccountModal(id); };
+        window.deleteAccount = function(id) {
+            if(confirm("Delete this account?")) {
+                window.appData.accounts = window.appData.accounts.filter(a => a.id !== id);
+                window.saveData();
+            }
+        };
+
+        window.changePautangColMonth = function(val) {
+            window.pautangColMonth = val;
+            window.saveData();
+        };
+
+        window.updatePautangField = function(idx, field, val) {
+            if(!window.appData.pautang[idx]) return;
+            if(field === 'interestRate') {
+                val = parseFloat(val) || 0;
+            }
+            window.appData.pautang[idx][field] = val;
+            window.saveData();
+        };
+
+        window.toggleExcludeTotal = function(idx) {
+            if(!window.appData.pautang[idx]) return;
+            window.appData.pautang[idx].excludeFromTotal = !window.appData.pautang[idx].excludeFromTotal;
+            window.saveData();
+        };
+
+        window.renderPautangTable = function() {
+            let tbody = document.getElementById('pautangTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            let pautangs = window.appData.pautang || [];
+            let masterTotal = 0;
+
+            let monthSelectElem = document.getElementById('pautangColumnMonthSelect');
+            if(monthSelectElem) monthSelectElem.value = window.pautangColMonth || window.activeMonth;
+
+            if(pautangs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 italic">No pautang records found. Click "Add Borrower / Loan Entry" to start.</td></tr>`;
+                document.getElementById('masterPautangTotal').innerText = formatPHP(0);
+                return;
+            }
+
+            pautangs.forEach((p, idx) => {
+                let basePrincipal = parseFloat(p.principal || 0);
+                let interestRate = parseFloat(p.interestRate || 0) / 100;
+                let addInterestToCapital = p.addInterestToCapital === 'yes';
+                let excludeFromTotal = !!p.excludeFromTotal;
+
+                if(!p.transactions) p.transactions = [];
+
+                let totalAddLoans = 0;
+                let totalPayments = 0;
+                let selectedMonthColl = 0;
+
+                let colMonthIdx = monthList.indexOf(window.pautangColMonth || window.activeMonth);
+                let activeMonthNumStr = String(colMonthIdx + 1).padStart(2, '0');
+                let activePrefix = `${window.activeYear}-${activeMonthNumStr}`;
+
+                p.transactions.forEach(tx => {
+                    let amt = parseFloat(tx.amount || 0);
+                    if(tx.type === 'borrow') {
+                        totalAddLoans += amt;
+                    } else if(tx.type === 'payment') {
+                        totalPayments += amt;
+                        if(tx.date && tx.date.startsWith(activePrefix)) {
+                            selectedMonthColl += amt;
+                        }
+                    }
+                });
+
+                let totalPrincipal = basePrincipal + totalAddLoans;
+                let netBalance = 0;
+
+                if (addInterestToCapital) {
+                    let accruedInterest = totalPrincipal * interestRate;
+                    netBalance = (totalPrincipal + accruedInterest) - totalPayments;
+                } else {
+                    let flatInterest = basePrincipal * interestRate;
+                    netBalance = totalPrincipal + flatInterest - totalPayments;
+                }
+
+                if(!excludeFromTotal) {
+                    masterTotal += netBalance;
+                }
+
+                let netBalanceDisplayClass = excludeFromTotal
+                    ? "line-through text-slate-500 decoration-rose-500/80 decoration-2"
+                    : "text-brand-400 font-bold";
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-4 font-bold text-white cursor-pointer group" onclick="openBorrowerCalendar(${idx})">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="text-brand-400 group-hover:underline">${p.name}</span>
+                                <i class="fa-solid fa-calendar-days text-[11px] text-slate-500 group-hover:text-brand-400"></i>
+                            </div>
+                        </td>
+                        <td class="p-4 font-bold text-slate-200">${formatPHP(totalPrincipal)}</td>
+                        <td class="p-4 text-slate-300">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" value="${p.interestRate || 0}" onchange="updatePautangField(${idx}, 'interestRate', this.value)" class="w-14 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center focus:outline-none focus:border-brand-500 shadow-inner font-semibold">
+                                <span class="text-xs font-semibold">%</span>
+                                <select onchange="updatePautangField(${idx}, 'addInterestToCapital', this.value)" class="bg-slate-800 border border-slate-700 text-xs text-brand-300 rounded-lg px-2 py-1 focus:outline-none focus:border-brand-500 shadow-inner font-semibold">
+                                    <option value="yes" ${addInterestToCapital ? 'selected' : ''}>+Cap (Yes)</option>
+                                    <option value="no" ${!addInterestToCapital ? 'selected' : ''}>Flat (No)</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td class="p-4 font-bold text-emerald-400">${formatPHP(selectedMonthColl)}</td>
+                        <td class="p-4 bg-brand-950/25 cursor-pointer select-none group" onclick="toggleExcludeTotal(${idx})" title="Click to include/exclude from total outstanding">
+                            <div class="flex items-center justify-between">
+                                <span class="${netBalanceDisplayClass} text-xs transition">${formatPHP(netBalance)}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg ${excludeFromTotal ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' : 'bg-brand-500/15 text-brand-400 border border-brand-500/30 opacity-0 group-hover:opacity-100 transition'}">
+                                    ${excludeFromTotal ? 'Excluded' : 'Included'}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <button onclick="deletePautang(${idx})" title="Delete Entry" class="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 inline-flex items-center justify-center transition shadow"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            document.getElementById('masterPautangTotal').innerText = formatPHP(masterTotal);
+        };
+
+        window.openPautangModal = function() {
+            document.getElementById('pautangName').value = '';
+            document.getElementById('pautangPrincipal').value = '';
+            document.getElementById('pautangInterest').value = '0';
+            document.getElementById('pautangAddInterestToCapital').value = 'yes';
+            document.getElementById('pautangModal').classList.remove('hidden');
+        };
+        window.closePautangModal = function() { document.getElementById('pautangModal').classList.add('hidden'); };
+
+        window.savePautang = function() {
+            let name = document.getElementById('pautangName').value.trim();
+            let principal = parseFloat(document.getElementById('pautangPrincipal').value) || 0;
+            let interestRate = parseFloat(document.getElementById('pautangInterest').value) || 0;
+            let addInterestToCapital = document.getElementById('pautangAddInterestToCapital').value;
+            if(!name) return alert("Please enter borrower name.");
+
+            if(!window.appData.pautang) window.appData.pautang = [];
+            window.appData.pautang.push({
+                id: 'p_' + Date.now(),
+                name, principal, interestRate, addInterestToCapital,
+                excludeFromTotal: false,
+                transactions: []
+            });
+            window.saveData();
+            closePautangModal();
+        };
+
+        window.deletePautang = function(idx) {
+            if(confirm("Delete this pautang entry?")) {
+                window.appData.pautang.splice(idx, 1);
+                window.saveData();
+            }
+        };
+
+        window.openBorrowerCalendar = function(idx) {
+            currentActiveBorrowerIdx = idx;
+            let p = window.appData.pautang[idx];
+            document.getElementById('calBorrowerTitle').innerText = `Ledger: ${p.name}`;
+            calMonthIndex = monthList.indexOf(window.pautangColMonth || window.activeMonth);
+            calYearValue = parseInt(window.activeYear) || 2026;
+
+            let defDate = `${calYearValue}-${String(calMonthIndex+1).padStart(2,'0')}-01`;
+            document.getElementById('selectedTxDate').value = defDate;
+
+            renderCalendarGrid();
+            renderBorrowerTxList();
+            document.getElementById('borrowerCalendarModal').classList.remove('hidden');
+        };
+
+        window.closeBorrowerCalendarModal = function() {
+            document.getElementById('borrowerCalendarModal').classList.add('hidden');
+            renderPautangTable();
+        };
+
+        window.changeCalMonth = function(direction) {
+            calMonthIndex += direction;
+            if(calMonthIndex > 11) { calMonthIndex = 0; calYearValue++; }
+            if(calMonthIndex < 0) { calMonthIndex = 11; calYearValue--; }
+            renderCalendarGrid();
+        };
+
+        window.renderCalendarGrid = function() {
+            document.getElementById('calMonthYearLabel').innerText = `${monthList[calMonthIndex]} ${calYearValue}`;
+            let grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
+
+            let firstDayIndex = new Date(calYearValue, calMonthIndex, 1).getDay();
+            let totalDays = new Date(calYearValue, calMonthIndex + 1, 0).getDate();
+
+            for(let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div></div>`;
+            }
+
+            let p = window.appData.pautang[currentActiveBorrowerIdx];
+            let txDatesMap = {};
+            (p.transactions || []).forEach(tx => { txDatesMap[tx.date] = true; });
+
+            for(let day = 1; day <= totalDays; day++) {
+                let mStr = String(calMonthIndex + 1).padStart(2, '0');
+                let dStr = String(day).padStart(2, '0');
+                let dateKey = `${calYearValue}-${mStr}-${dStr}`;
+                let hasTx = txDatesMap[dateKey] ? 'bg-brand-500/25 border-brand-500 text-brand-300 font-bold shadow' : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800';
+
+                grid.innerHTML += `<div onclick="selectCalendarDate('${dateKey}')" class="p-2 rounded-xl border cursor-pointer text-xs transition ${hasTx}">${day}</div>`;
+            }
+        };
+
+        window.selectCalendarDate = function(dateKey) {
+            document.getElementById('selectedTxDate').value = dateKey;
+        };
+
+        window.saveBorrowerTransaction = function() {
+            if(currentActiveBorrowerIdx === null) return;
+            let date = document.getElementById('selectedTxDate').value;
+            let type = document.getElementById('selectedTxType').value;
+            let amount = parseFloat(document.getElementById('selectedTxAmount').value) || 0;
+
+            if(!date) return alert("Please select a date from the calendar first.");
+            if(amount <= 0) return alert("Please enter a valid amount.");
+
+            let p = window.appData.pautang[currentActiveBorrowerIdx];
+            if(!p.transactions) p.transactions = [];
+
+            p.transactions.push({ date, type, amount });
+            window.saveData();
+            renderCalendarGrid();
+            renderBorrowerTxList();
+            document.getElementById('selectedTxAmount').value = '';
+        };
+
+        window.renderBorrowerTxList = function() {
+            let container = document.getElementById('borrowerTxList');
+            container.innerHTML = '';
+            let p = window.appData.pautang[currentActiveBorrowerIdx];
+            if(!p.transactions || p.transactions.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-500 italic">No transactions logged yet.</p>`;
+                return;
+            }
+
+            p.transactions.forEach((tx, tIdx) => {
+                let badgeColor = tx.type === 'borrow' ? 'text-amber-400 bg-amber-500/15 border border-amber-500/30' : 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30';
+                let labelText = tx.type === 'borrow' ? 'Dagdag Utang' : 'Payment';
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs shadow-inner">
+                        <div><span class="text-slate-400 mr-2.5 font-medium">${tx.date}</span><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${badgeColor}">${labelText}</span></div>
+                        <div class="flex items-center space-x-2.5"><span class="font-bold text-white">${formatPHP(tx.amount)}</span><button onclick="deleteTx(${tIdx})" class="w-6 h-6 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
+                    </div>`;
+            });
+        };
+
+        window.deleteTx = function(tIdx) {
+            let p = window.appData.pautang[currentActiveBorrowerIdx];
+            p.transactions.splice(tIdx, 1);
+            window.saveData();
+            renderCalendarGrid();
+            renderBorrowerTxList();
+        };
+
+        window.changeActiveMonth = function(m) { window.activeMonth = m; renderExpenseTable(); };
+        window.changeActiveYear = function(y) { window.activeYear = y; renderExpenseTable(); };
+        window.changeChartYear = function(y) { window.chartYear = y; document.getElementById('chartYearLabel').innerText = y; renderCharts(); };
+
+        window.renderExpenseTable = function() {
+            let mSel = document.getElementById('monthSelector');
+            mSel.innerHTML = '';
+            monthList.forEach(m => {
+                let opt = document.createElement('option');
+                opt.value = m; opt.innerText = m;
+                if(m === window.activeMonth) opt.selected = true;
+                mSel.appendChild(opt);
+            });
+
+            let compositeKey = `${window.activeMonth} ${window.activeYear}`;
+            document.getElementById('currentMonthTitle').innerText = compositeKey;
+
+            let tbody = document.getElementById('expenseTableBody');
+            tbody.innerHTML = '';
+
+            if(!window.appData.expenses) window.appData.expenses = {};
+            if(!window.appData.expenses[compositeKey]) window.appData.expenses[compositeKey] = [];
+
+            let rows = window.appData.expenses[compositeKey];
+            let totalMonthAmt = 0;
+
+            if(rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 italic">No expense records found for ${compositeKey}. Click "Add Row" to start logging.</td></tr>`;
+            }
+
+            rows.forEach((r, idx) => {
+                let amt = parseFloat(r.amount || 0);
+                totalMonthAmt += amt;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3"><input type="date" value="${r.date || ''}" onchange="updateRow(${idx}, 'date', this.value)" class="w-full bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-white text-xs shadow-inner"></td>
+                        <td class="p-3"><input type="text" value="${r.responsibilities || ''}" onchange="updateRow(${idx}, 'responsibilities', this.value)" class="w-full bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-white text-xs shadow-inner"></td>
+                        <td class="p-3"><input type="text" value="${r.food || ''}" onchange="updateRow(${idx}, 'food', this.value)" class="w-full bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-white text-xs shadow-inner"></td>
+                        <td class="p-3"><input type="text" value="${r.transpo || ''}" onchange="updateRow(${idx}, 'transpo', this.value)" class="w-full bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-white text-xs shadow-inner"></td>
+                        <td class="p-3"><input type="text" value="${r.shopping || ''}" onchange="updateRow(${idx}, 'shopping', this.value)" class="w-full bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-white text-xs shadow-inner"></td>
+                        <td class="p-3"><input type="text" value="${r.amount || 0}" onchange="updateRow(${idx}, 'amount', this.value)" class="w-full bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-white text-xs font-bold text-brand-400 shadow-inner"></td>
+                        <td class="p-3 text-center"><button onclick="deleteRow(${idx})" class="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center transition mx-auto shadow"><i class="fa-solid fa-trash text-xs"></i></button></td>
+                    </tr>`;
+            });
+            document.getElementById('currentMonthTotal').innerText = formatPHP(totalMonthAmt);
+        };
+
+        window.addRowEntry = function() {
+            let compositeKey = `${window.activeMonth} ${window.activeYear}`;
+            if(!window.appData.expenses[compositeKey]) window.appData.expenses[compositeKey] = [];
+            window.appData.expenses[compositeKey].push({ date: `${window.activeYear}-01-01`, responsibilities: '', food: '', transpo: '', shopping: '', amount: 0 });
+            window.saveData();
+        };
+
+        window.updateRow = function(idx, field, val) {
+            let compositeKey = `${window.activeMonth} ${window.activeYear}`;
+            if(field === 'amount') val = val === '' ? 0 : parseFloat(val) || 0;
+            window.appData.expenses[compositeKey][idx][field] = val;
+            window.saveData();
+        };
+
+        window.deleteRow = function(idx) {
+            let compositeKey = `${window.activeMonth} ${window.activeYear}`;
+            window.appData.expenses[compositeKey].splice(idx, 1);
+            window.saveData();
+        };
+
+        window.toggleTheme = function() {
+            let html = document.documentElement;
+            let icon = document.getElementById('themeIcon');
+            if(html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-moon text-slate-700";
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-sun text-amber-400";
+            }
+        };
+
+        window.onload = function() { refreshUI(); };
+    </script>
+</body>
+</html>
